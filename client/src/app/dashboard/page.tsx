@@ -18,7 +18,7 @@ import { cn, fmtTime, idOf, nameOf } from '@/lib/utils';
 export default function DashboardPage() {
   const { user } = useAuth();
   const toast = useToast();
-  const barbers = useAsync(() => api<{ barbers: Barber[] }>('/barbers').then((r) => r.barbers));
+  const barbers = useAsync(() => api<{ barbers: Barber[] }>('/barbers').then((r) => r.barbers), [], { cacheKey: 'barbers' });
   const [barberId, setBarberId] = useState('');
   const [cancelTarget, setCancelTarget] = useState<Booking | null>(null);
   const [cancelling, setCancelling] = useState(false);

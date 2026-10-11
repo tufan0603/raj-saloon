@@ -10,7 +10,7 @@ import { useSettings } from '@/lib/settings-context';
 import type { Settings } from '@/lib/types';
 import { cn, WEEKDAYS } from '@/lib/utils';
 
-const KEYS = ['openTime', 'closeTime', 'slotInterval', 'weeklyOff', 'maxAdvanceDays', 'tokenStart', 'allowOnlineBooking', 'maxActiveBookingsPerUser', 'timezone'] as const;
+const KEYS = ['openTime', 'closeTime', 'slotInterval', 'weeklyOff', 'maxAdvanceDays', 'tokenStart', 'allowOnlineBooking', 'maxActiveBookingsPerUser', 'timezone', 'siteUrl'] as const;
 type Form = Pick<Settings, (typeof KEYS)[number]>;
 
 export default function SalonSettingsPage() {
@@ -65,6 +65,13 @@ export default function SalonSettingsPage() {
             </div>
           </Field>
           <Field label="Timezone" hint="IANA name, e.g. Asia/Kolkata"><Input value={form.timezone} onChange={(e) => set('timezone', e.target.value)} /></Field>
+        </div>
+
+        <div className="card space-y-3">
+          <SectionTitle title="Public link" />
+          <Field label="Website URL" hint="Used for the shop QR code, shop card and share links. Leave empty to use the current address.">
+            <Input type="url" inputMode="url" value={form.siteUrl || ''} onChange={(e) => set('siteUrl', e.target.value)} placeholder="https://raj-saloon.vercel.app" />
+          </Field>
         </div>
 
         <div className="card space-y-3">

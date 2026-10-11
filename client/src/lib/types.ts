@@ -57,6 +57,7 @@ export interface Settings {
   whatsapp: string;
   address: string;
   mapUrl: string;
+  siteUrl?: string;
   upiId?: string;
   announcement: string;
   announcementActive: boolean;

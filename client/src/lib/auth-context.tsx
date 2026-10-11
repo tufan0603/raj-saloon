@@ -17,9 +17,29 @@ interface AuthState {
 
 const AuthContext = createContext<AuthState | null>(null);
 
+const USER_CACHE = 'saloonease_user';
+const readCachedUser = (): User | null => {
+  try {
+    if (typeof window === 'undefined' || !getToken()) return null;
+    const raw = localStorage.getItem(USER_CACHE);
+    return raw ? (JSON.parse(raw) as User) : null;
+  } catch {
+    return null;
+  }
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUserState] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // keep a copy of the profile so protected pages render immediately on the next launch (verified in background)
+  const setUser = useCallback((u: User | null) => {
+    setUserState(u);
+    try {
+      if (u) localStorage.setItem(USER_CACHE, JSON.stringify(u));
+      else localStorage.removeItem(USER_CACHE);
+    } catch {}
+  }, []);
 
   const refresh = useCallback(async () => {
     if (!getToken()) {
@@ -27,27 +47,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
       return;
     }
+    const cached = readCachedUser();
+    if (cached) {
+      setUserState(cached);
+      setLoading(false);
+    }
     try {
       const res = await api<{ user: User }>('/auth/me');
       setUser(res.user);
-    } catch {
-      setUser(null);
+    } catch (e: any) {
+      // only drop the session on a definite auth failure, not on a network hiccup / sleeping server
+      if (e?.status === 401 || e?.status === 403 || !cached) setUser(null);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [setUser]);
 
   useEffect(() => {
     refresh();
     const onLogout = () => setUser(null);
     window.addEventListener('saloonease:logout', onLogout);
     return () => window.removeEventListener('saloonease:logout', onLogout);
-  }, [refresh]);
+  }, [refresh, setUser]);
 
-  const applyAuth = useCallback((payload: { token: string; user: User }) => {
-    setToken(payload.token);
-    setUser(payload.user);
-  }, []);
+  const applyAuth = useCallback(
+    (payload: { token: string; user: User }) => {
+      setToken(payload.token);
+      setUser(payload.user);
+    },
+    [setUser],
+  );
 
   const login = useCallback(
     async (email: string, password: string) => {
@@ -70,11 +99,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     clearToken();
     setUser(null);
-  }, []);
+  }, [setUser]);
 
   const value = useMemo<AuthState>(
     () => ({ user, loading, isAdmin: user?.role === 'admin', login, register, logout, refresh, setUser, applyAuth }),
-    [user, loading, login, register, logout, refresh, applyAuth],
+    [user, loading, login, register, logout, refresh, applyAuth, setUser],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

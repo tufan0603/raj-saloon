@@ -5,6 +5,7 @@ import { AuthProvider } from '@/lib/auth-context';
 import { ToastProvider } from '@/components/toast';
 import { PWAProvider } from '@/components/pwa';
 import { SettingsProvider } from '@/lib/settings-context';
+import { TopLoader } from '@/components/loader';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
 const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'SaloonEase';
@@ -43,7 +44,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ToastProvider>
           <SettingsProvider>
             <AuthProvider>
-              <PWAProvider>{children}</PWAProvider>
+              <PWAProvider>
+                <TopLoader />
+                {children}
+              </PWAProvider>
             </AuthProvider>
           </SettingsProvider>
         </ToastProvider>

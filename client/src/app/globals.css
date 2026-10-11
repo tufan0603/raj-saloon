@@ -19,7 +19,10 @@ body {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   overscroll-behavior-y: none;
+  overflow-x: hidden; /* nothing may push the page wider than the phone */
+  max-width: 100vw;
 }
+img, video, canvas { max-width: 100%; }
 
 input, select, textarea, button { font: inherit; }
 /* Prevent iOS zoom on focus */

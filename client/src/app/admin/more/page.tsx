@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Scissors, Users, Image as ImageIcon, Settings, UserRound, LogOut, ChevronRight, Smartphone, Contact } from 'lucide-react';
+import { Scissors, Users, Image as ImageIcon, Settings, UserRound, LogOut, ChevronRight, Smartphone, Contact, QrCode } from 'lucide-react';
 import { AdminShell } from '@/components/admin';
 import { Avatar, Button } from '@/components/ui';
 import { useAuth } from '@/lib/auth-context';
@@ -13,6 +13,7 @@ const ITEMS = [
   { href: '/admin/clients', icon: Contact, title: 'Clients', text: 'Customer list, history, block users' },
   { href: '/admin/content', icon: ImageIcon, title: 'Content & gallery', text: 'Hero image, photos, videos, announcements' },
   { href: '/admin/settings', icon: Settings, title: 'Salon settings', text: 'Hours, weekly off, slot size, booking rules' },
+  { href: '/admin/qr', icon: QrCode, title: 'QR code & shop card', text: 'Download the booking QR and a printable shop card' },
 ];
 
 export default function MorePage() {

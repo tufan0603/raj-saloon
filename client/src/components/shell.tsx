@@ -80,21 +80,27 @@ export function AppShell({ children, nav = 'user', title, back, right, subtitle,
       <main className={cn('mx-auto w-full max-w-md flex-1', !bare && 'px-4 pt-4', nav === 'none' ? 'pb-8' : 'safe-bottom')}>{children}</main>
 
       {nav !== 'none' && (
-        <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 backdrop-blur-md" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-          <div className={cn('mx-auto grid h-16 w-full max-w-md text-[11px]', items.length === 5 ? 'grid-cols-5' : 'grid-cols-4')}>
+        <nav
+          className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 shadow-[0_-6px_20px_rgba(15,23,42,0.06)] backdrop-blur-md"
+          style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 6px)' }}
+        >
+          <div className={cn('mx-auto grid h-[64px] w-full max-w-md px-2 text-[11px]', items.length === 5 ? 'grid-cols-5' : 'grid-cols-4')}>
             {items.map((it) => {
               const active = it.href === '/' || it.href === '/admin' ? pathname === it.href : pathname.startsWith(it.href);
               const Icon = it.icon;
+              const primary = 'primary' in it && it.primary;
               return (
-                <Link key={it.href} href={it.href} className={cn('flex flex-col items-center justify-center gap-1 transition', active ? 'font-bold text-brand-600' : 'font-semibold text-slate-400')}>
-                  {'primary' in it && it.primary ? (
-                    <span className={cn('-mt-3 flex h-10 w-10 items-center justify-center rounded-full text-white shadow-md shadow-brand-600/30', active ? 'bg-brand-700' : 'bg-brand-600')}>
-                      <Icon className="h-5 w-5" />
+                <Link key={it.href} href={it.href} aria-current={active ? 'page' : undefined} className={cn('flex min-w-0 flex-col items-center justify-center gap-1 transition active:scale-95', active ? 'font-bold text-brand-700' : 'font-semibold text-slate-400')}>
+                  {primary ? (
+                    <span className={cn('flex h-9 w-9 items-center justify-center rounded-full text-white shadow-md shadow-brand-600/30', active ? 'bg-brand-700' : 'bg-brand-600')}>
+                      <Icon className="h-[18px] w-[18px]" />
                     </span>
                   ) : (
-                    <Icon className="h-5 w-5" />
+                    <span className={cn('flex h-9 w-14 items-center justify-center rounded-full transition', active ? 'bg-brand-50' : 'bg-transparent')}>
+                      <Icon className="h-5 w-5" />
+                    </span>
                   )}
-                  <span>{it.label}</span>
+                  <span className="max-w-full truncate leading-none">{it.label}</span>
                 </Link>
               );
             })}

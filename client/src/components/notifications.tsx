@@ -64,9 +64,27 @@ export function AdminBell() {
   const [pushConfigured, setPushConfigured] = useState(true);
   const [sound, setSound] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [askOpen, setAskOpen] = useState(false);
   const seen = useRef<Set<string> | null>(null);
   const openRef = useRef(false);
   openRef.current = open;
+
+  // Ask admins once to turn on phone notifications (browsers only allow the permission dialog after a tap,
+  // so we show our own sheet with an Enable button right after login / install).
+  useEffect(() => {
+    if (push !== 'off' || !pushConfigured) return;
+    if (typeof Notification === 'undefined' || Notification.permission !== 'default') return;
+    try {
+      const d = localStorage.getItem('saloonease_push_ask');
+      if (d && Date.now() - Number(d) < 24 * 3600 * 1000) return;
+    } catch {}
+    const t = setTimeout(() => setAskOpen(true), 1800);
+    return () => clearTimeout(t);
+  }, [push, pushConfigured]);
+  const laterAsk = () => {
+    setAskOpen(false);
+    try { localStorage.setItem('saloonease_push_ask', String(Date.now())); } catch {}
+  };
 
   useEffect(() => {
     try { setSound(localStorage.getItem(SOUND_KEY) !== 'off'); } catch {}
@@ -154,6 +172,30 @@ export function AdminBell() {
 
   return (
     <>
+      <Sheet
+        open={askOpen}
+        onClose={laterAsk}
+        footer={
+          <div className="space-y-2">
+            <Button className="w-full py-3.5 text-base" loading={busy} onClick={async () => { await togglePush(); setAskOpen(false); }}>
+              <BellRing className="h-5 w-5" /> Enable notifications
+            </Button>
+            <button onClick={laterAsk} className="w-full py-2 text-sm font-semibold text-slate-400">Maybe later</button>
+          </div>
+        }
+      >
+        <div className="flex flex-col items-center px-1 text-center">
+          <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-50 text-brand-600"><BellRing className="h-8 w-8" /></span>
+          <h3 className="mt-3 text-xl font-black text-slate-900">Never miss a booking</h3>
+          <p className="mt-1 text-sm text-slate-500">Get an alert with sound on this phone, even when the app is closed, whenever:</p>
+          <ul className="mt-3 w-full space-y-1.5 text-left text-sm text-slate-700">
+            <li className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2"><CalendarPlus className="h-4 w-4 text-brand-600" /> a client books a slot</li>
+            <li className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2"><CalendarX2 className="h-4 w-4 text-red-500" /> a booking is cancelled</li>
+            <li className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2"><Wallet className="h-4 w-4 text-sky-600" /> a UPI payment needs your confirmation</li>
+          </ul>
+          <p className="mt-3 text-[11px] text-slate-400">Your phone will ask once for permission. {isIosBrowserWithoutInstall() ? 'On iPhone, first add the app to your Home Screen.' : ''}</p>
+        </div>
+      </Sheet>
       <button onClick={() => { unlockAudio(); setOpen(true); }} aria-label="Notifications" className="relative rounded-lg p-2 text-slate-600 hover:bg-slate-100">
         {unread > 0 ? <BellRing className="h-5 w-5 text-brand-600" /> : <Bell className="h-5 w-5" />}
         {unread > 0 && <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">{unread > 99 ? '99+' : unread}</span>}

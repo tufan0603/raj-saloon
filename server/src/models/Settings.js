@@ -26,6 +26,7 @@ const settingsSchema = new mongoose.Schema(
     whatsapp: { type: String, default: '' },
     address: { type: String, default: '' },
     mapUrl: { type: String, default: '' },
+    siteUrl: { type: String, default: '' }, // public URL of the client app, used for QR codes & shop cards
     upiId: { type: String, default: '' },
     announcement: { type: String, default: '' },
     announcementActive: { type: Boolean, default: false },

@@ -14,9 +14,9 @@ import { cn, fmtTime, initials, money, waLink, WEEKDAYS } from '@/lib/utils';
 export default function HomePage() {
   const { settings } = useSettings();
   const { user } = useAuth();
-  const services = useAsync(() => api<{ services: Service[] }>('/services').then((r) => r.services));
-  const barbers = useAsync(() => api<{ barbers: Barber[] }>('/barbers').then((r) => r.barbers));
-  const queue = usePolling(() => api<{ queue: QueueData | null }>('/queue').then((r) => r.queue), 20000);
+  const services = useAsync(() => api<{ services: Service[] }>('/services').then((r) => r.services), [], { cacheKey: 'services' });
+  const barbers = useAsync(() => api<{ barbers: Barber[] }>('/barbers').then((r) => r.barbers), [], { cacheKey: 'barbers' });
+  const queue = usePolling(() => api<{ queue: QueueData | null }>('/queue').then((r) => r.queue), 20000, [], { cacheKey: 'queue-home' });
   const openNow = useOpenNow(settings.openTime, settings.closeTime, settings.weeklyOff);
   const [lb, setLb] = useState<{ items: Media[]; index: number | null }>({ items: [], index: null });
   const [showAllStyles, setShowAllStyles] = useState(false);

@@ -39,6 +39,9 @@ export async function api<T = any>(path: string, opts: Options = {}): Promise<T>
   if (token) headers.Authorization = `Bearer ${token}`;
   if (!opts.formData) headers['Content-Type'] = 'application/json';
 
+  // Free-tier hosts (Render, etc.) sleep when idle; tell the UI when a request is taking unusually long.
+  const slowTimer = typeof window !== 'undefined' ? setTimeout(() => window.dispatchEvent(new CustomEvent('saloonease:slow', { detail: { path } })), 2500) : null;
+  window?.dispatchEvent?.(new CustomEvent('saloonease:request', { detail: { path, phase: 'start' } }));
   let res: Response;
   try {
     res = await fetch(`${API_URL}${path}${qs(opts.query)}`, {
@@ -50,6 +53,9 @@ export async function api<T = any>(path: string, opts: Options = {}): Promise<T>
   } catch (e: any) {
     if (e?.name === 'AbortError') throw e;
     throw new ApiError(0, 'Cannot reach the server. Check your internet connection.');
+  } finally {
+    if (slowTimer) clearTimeout(slowTimer);
+    window?.dispatchEvent?.(new CustomEvent('saloonease:request', { detail: { path, phase: 'end' } }));
   }
 
   const data = await res.json().catch(() => ({}));

@@ -22,9 +22,9 @@ function BookingForm() {
   const { user, setUser } = useAuth();
   const { settings } = useSettings();
 
-  const barbers = useAsync(() => api<{ barbers: Barber[] }>('/barbers').then((r) => r.barbers));
-  const services = useAsync(() => api<{ services: Service[] }>('/services').then((r) => r.services));
-  const dates = useAsync(() => api<{ today: string; dates: string[] }>('/dates'));
+  const barbers = useAsync(() => api<{ barbers: Barber[] }>('/barbers').then((r) => r.barbers), [], { cacheKey: 'barbers' });
+  const services = useAsync(() => api<{ services: Service[] }>('/services').then((r) => r.services), [], { cacheKey: 'services' });
+  const dates = useAsync(() => api<{ today: string; dates: string[] }>('/dates'), [], { cacheKey: 'dates' });
 
   const [barberId, setBarberId] = useState(params.get('barberId') || '');
   const [serviceId, setServiceId] = useState(params.get('serviceId') || '');

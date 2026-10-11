@@ -25,7 +25,12 @@ export const schemas = {
       whatsapp: z.string().trim().max(20),
       address: z.string().trim().max(300),
       mapUrl: z.string().trim().max(500),
-      upiId: z.string().trim().max(80),
+      siteUrl: z.string().trim().url('Enter the full URL, e.g. https://raj-saloon.vercel.app').or(z.literal('')),
+      upiId: z
+        .string()
+        .trim()
+        .max(80)
+        .regex(/^$|^[a-zA-Z0-9.\-_]{2,}@[a-zA-Z][a-zA-Z0-9]{1,}$/, 'UPI ID must look like name@bank (e.g. 98765@ybl or shop@okaxis), not a phone number'),
       announcement: z.string().trim().max(300),
       announcementActive: z.boolean(),
       heroImage: media,

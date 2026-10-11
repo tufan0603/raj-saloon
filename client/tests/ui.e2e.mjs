@@ -278,6 +278,10 @@ await test('admin payments, services, barbers, content, settings, clients pages 
   await shot('17-admin-barbers');
   await goto('/admin/content'); await waitText('Home page photos & videos'); await shot('18-admin-content', true);
   await goto('/admin/settings'); await waitText('Working hours'); await shot('19-admin-settings');
+  await goto('/admin/qr'); await waitText('Shop card designer');
+  await page.waitForFunction(() => { const c = document.querySelector('canvas'); if (!c) return false; const ctx = c.getContext('2d'); const d = ctx.getImageData(c.width / 2, c.height / 2, 1, 1).data; return d[3] > 0; }, { timeout: 30000 });
+  await page.waitForSelector('img[alt="QR code to the booking site"]');
+  await shot('19b-admin-qr-card', true);
   await goto('/admin/clients'); await waitText(USER.name); await shot('20-admin-clients');
   await clickText(USER.name, 'a');
   await waitText('Booking history');

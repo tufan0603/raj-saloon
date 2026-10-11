@@ -18,7 +18,7 @@ export function PaymentChoice({ value, onChange, amount }: { value: PayChoice; o
   const upi = isUpiEnabled(settings);
   const opts: { value: PayChoice; title: string; text: string; icon: any; disabled?: boolean }[] = [
     { value: 'salon', title: 'Pay at salon', text: 'Cash or UPI at the counter after your service', icon: Store },
-    { value: 'upi', title: 'Pay now via UPI', text: upi ? `Send ${money(amount)} to ${settings.upiId} from any UPI app` : 'Not available yet', icon: Smartphone, disabled: !upi },
+    { value: 'upi', title: 'Pay now via UPI', text: upi ? `Send ${money(amount)} to ${settings.upiId} from any UPI app` : 'Coming soon. Pay at the salon for now.', icon: Smartphone, disabled: !upi },
   ];
   return (
     <div className="grid grid-cols-1 gap-2">

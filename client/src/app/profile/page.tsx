@@ -9,13 +9,14 @@ import { useToast } from '@/components/toast';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { useInstallPrompt } from '@/lib/hooks';
+import { openInstallSheet } from '@/components/pwa';
 import type { User } from '@/lib/types';
 
 function ProfileInner() {
   const { user, setUser, logout, isAdmin } = useAuth();
   const router = useRouter();
   const toast = useToast();
-  const { canInstall, install, installed, isIOS } = useInstallPrompt();
+  const { canInstall, installed, isIOS } = useInstallPrompt();
   const [name, setName] = useState(user?.name || '');
   const [phone, setPhone] = useState(user?.phone || '');
   const [saving, setSaving] = useState(false);
@@ -119,12 +120,10 @@ function ProfileInner() {
             <p className="flex items-center gap-2 text-xs font-medium text-brand-700">
               <CheckCircle2 className="h-4 w-4" /> Installed on this device
             </p>
-          ) : canInstall ? (
-            <Button variant="secondary" className="w-full" onClick={install}>
+          ) : canInstall || isIOS ? (
+            <Button variant="secondary" className="w-full" onClick={() => openInstallSheet()}>
               <Download className="h-4 w-4" /> Install app on phone
             </Button>
-          ) : isIOS ? (
-            <p className="text-xs text-slate-500">On iPhone: tap the Share button in Safari, then &ldquo;Add to Home Screen&rdquo;.</p>
           ) : (
             <p className="text-xs text-slate-500">Open this site in Chrome on your phone to install it as an app.</p>
           )}

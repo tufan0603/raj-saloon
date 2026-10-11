@@ -78,6 +78,16 @@ Admins land on `/admin`; clients land on `/`. Admins can still use the client si
 3. Bump `VERSION` in `client/public/sw.js` so phones that already installed the app refresh their icon.
 The logo file is used automatically in the header, login/register screens, 404 page, install banner, and email headers. Uploading a logo in Admin -> Content overrides it inside the app.
 
+**QR code & shop card**
+- Admin -> More -> **QR code & shop card**: download the booking QR (PNG), share the link, and design a printable shop card
+  (logo, name, tagline, hours, address, phone, QR; Classic / Dark / Emerald styles; 1080 x 1440 PNG, print button).
+- The QR encodes **Salon settings -> Website URL** (set to your live Vercel URL) so it also works when generated on localhost.
+
+**Speed on free hosting**
+- The client renders instantly from cached data (services, barbers, settings, your profile) and refreshes in the background; a thin progress bar shows activity.
+- If the API sleeps (Render free tier sleeps after 15 min idle), the first request can take 30-60 s; the app shows "Waking up the server". To avoid it, deploy the API to Vercel serverless (`server/vercel.json`) or ping `/api/health` every 10 minutes with a free monitor such as cron-job.org or UptimeRobot.
+- `npm run dev` is slow by design (compiles on demand). Always judge speed on the deployed build or `npm run build && npm start`.
+
 **Payments without a gateway (UPI)**
 - Admin -> More -> Content -> Contact -> enter the salon's **UPI ID**. Clients then see "Pay now via UPI" on the booking form, in the token popup and on Live Queue.
 - The client gets a QR code and an "Open UPI app" button with the amount prefilled (GPay, PhonePe, Paytm, BHIM), pays, and enters the UPI reference / UTR.
