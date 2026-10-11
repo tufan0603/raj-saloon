@@ -147,8 +147,8 @@ export default function BarbersPage() {
           !usage
             ? 'Checking bookings...'
             : usage.active > 0
-              ? `${del?.name} still has ${usage.active} waiting or in-chair booking(s). Removing will cancel them (clients see "Barber removed"). To keep them, move each booking to another barber first, or just mark ${del?.name} inactive.`
-              : `${del?.name} has no active bookings. ${usage.total ? `${usage.total} past booking(s) stay in reports.` : ''} Any linked admin login is unlinked, not deleted.`
+              ? `${del?.name} still has ${usage.active === 1 ? 'one client waiting or in the chair' : `${usage.active} clients waiting or in the chair`}. Removing the barber cancels ${usage.active === 1 ? 'that booking' : 'those bookings'} and the ${usage.active === 1 ? 'client sees' : 'clients see'} "Barber removed". To keep them, move each booking to another barber first, or simply mark ${del?.name} inactive.`
+              : `${del?.name} has no upcoming bookings. ${usage.total ? `${usage.total === 1 ? 'One past visit stays' : `${usage.total} past visits stay`} in reports.` : ''} A linked admin login is only unlinked, never deleted.`
         }
         confirmText={usage?.active ? `Cancel ${usage.active} & remove` : 'Remove'}
       />

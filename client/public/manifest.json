@@ -1,24 +1,67 @@
 {
-  "name": "SaloonEase - Salon Queue & Booking",
-  "short_name": "SaloonEase",
+  "name": "Raj Saloon - Salon Queue & Booking",
+  "short_name": "Raj Saloon",
   "description": "Instant salon slot booking and live queue tracking.",
   "id": "/",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#f8fafc",
+  "background_color": "#f8f3e7",
   "theme_color": "#059669",
   "lang": "en",
-  "categories": ["lifestyle", "business"],
+  "categories": [
+    "lifestyle",
+    "business"
+  ],
   "icons": [
-    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ],
   "shortcuts": [
-    { "name": "Book a slot", "short_name": "Book", "url": "/book?source=shortcut", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Live queue", "short_name": "Queue", "url": "/dashboard?source=shortcut", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+    {
+      "name": "Book a slot",
+      "short_name": "Book",
+      "url": "/book?source=shortcut",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Live queue",
+      "short_name": "Queue",
+      "url": "/dashboard?source=shortcut",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
   ]
 }

@@ -56,7 +56,11 @@ export async function createBookingRecord(opts) {
   if (!isAdmin && user) {
     const activeCount = await Booking.countDocuments({ user: user._id, status: { $in: ACTIVE_STATUSES }, date: { $gte: today } });
     if (activeCount >= settings.maxActiveBookingsPerUser) {
-      throw badRequest(`You already have ${activeCount} upcoming booking(s). Cancel one to book again.`);
+      throw badRequest(
+        activeCount === 1
+          ? 'You already have an upcoming booking. Cancel it from Live Queue if you want to book a different slot.'
+          : `You already have ${activeCount} upcoming bookings. Cancel one from Live Queue to book again.`,
+      );
     }
   }
 

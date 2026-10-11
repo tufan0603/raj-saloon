@@ -15,7 +15,7 @@ dotenv.config({ path: path.join(path.dirname(fileURLToPath(import.meta.url)), '.
 
 const API = process.env.API_URL || `http://localhost:${process.env.PORT || 5000}/api`;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || process.env.SEED_ADMIN_EMAIL;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || process.env.SEED_ADMIN_PASSWORD || 'admin123';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || process.env.SEED_ADMIN_PASSWORD;
 const RUN = Date.now().toString(36);
 const TAG = `E2E-${RUN}`;
 

@@ -15,7 +15,8 @@ const ADMIN = {
   name: process.env.SEED_ADMIN_NAME || 'Salon Owner',
   email: (process.env.SEED_ADMIN_EMAIL || env.adminEmails[0] || 'owner@gmail.com').toLowerCase(),
   phone: process.env.SEED_ADMIN_PHONE || '9999999999',
-  password: process.env.SEED_ADMIN_PASSWORD || 'admin123',
+  // No hardcoded default: if SEED_ADMIN_PASSWORD is not set a random one is generated and printed once.
+  password: process.env.SEED_ADMIN_PASSWORD || Math.random().toString(36).slice(2, 8) + Math.random().toString(36).slice(2, 8).toUpperCase(),
 };
 
 const SERVICES = [

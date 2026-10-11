@@ -31,12 +31,7 @@ npm install
 npm run dev                  # http://localhost:3000
 ```
 
-Default admin (from `server/.env` SEED_ADMIN_*):
-
-| Email | Password |
-| --- | --- |
-| highoninnovation.bdm@gmail.com | admin123 |
-
+The seed creates the first admin from `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` in `server/.env` (never commit that file).
 Change the password from **Profile -> Change password** after first login.
 
 ### How admins work
@@ -76,6 +71,12 @@ Admins land on `/admin`; clients land on `/`. Admins can still use the client si
 - Content: logo, hero image, gallery photos & videos (Cloudinary), announcement banner, contact details
 - Salon settings: open/close time, weekly off, slot size, book-ahead days, token start number, online booking on/off, max active bookings per client, timezone
 - Clients: list with visits / spent / no-shows, detail with history, block / unblock, make admin
+
+**Logo & app icons**
+1. Save the salon logo as `client/public/brand/logo.png` (square or circular, at least 512 px).
+2. `cd client && npm run icons` - generates all PWA icons, Apple touch icon, favicons and `brand/logo-512.png`, and sets the manifest name from `NEXT_PUBLIC_APP_NAME`.
+3. Bump `VERSION` in `client/public/sw.js` so phones that already installed the app refresh their icon.
+The logo file is used automatically in the header, login/register screens, 404 page, install banner, and email headers. Uploading a logo in Admin -> Content overrides it inside the app.
 
 **Payments without a gateway (UPI)**
 - Admin -> More -> Content -> Contact -> enter the salon's **UPI ID**. Clients then see "Pay now via UPI" on the booking form, in the token popup and on Live Queue.

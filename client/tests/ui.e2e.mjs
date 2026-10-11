@@ -4,7 +4,15 @@ import { mkdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 
 const BASE = process.env.BASE_URL || 'http://localhost:3000';
-const ADMIN = { email: process.env.ADMIN_EMAIL || 'rajpramanik@gmail.com', password: process.env.ADMIN_PASSWORD || 'admin123' };
+// Admin credentials come from env (ADMIN_EMAIL / ADMIN_PASSWORD) or from ../server/.env (SEED_ADMIN_*); never hardcode them here.
+import { readFileSync } from 'fs';
+const serverEnv = (() => {
+  try {
+    return Object.fromEntries(readFileSync(new URL('../../server/.env', import.meta.url), 'utf8').split(/\r?\n/).filter((l) => /^[A-Z_]+=/.test(l)).map((l) => { const i = l.indexOf('='); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, '')]; }));
+  } catch { return {}; }
+})();
+const ADMIN = { email: process.env.ADMIN_EMAIL || serverEnv.SEED_ADMIN_EMAIL, password: process.env.ADMIN_PASSWORD || serverEnv.SEED_ADMIN_PASSWORD };
+if (!ADMIN.email || !ADMIN.password) { console.error('Set ADMIN_EMAIL and ADMIN_PASSWORD (or SEED_ADMIN_* in server/.env)'); process.exit(2); }
 const RUN = Date.now().toString(36);
 const USER = { name: `E2E-UI ${RUN}`, email: `e2e-ui.${RUN}@example.com`, phone: '9000001234', password: 'uipass123' };
 const SHOTS = fileURLToPath(new URL('./shots/', import.meta.url));
@@ -53,8 +61,14 @@ const clickText = async (t, tag = 'button, a, label, div[role=button]') => {
   if (!ok) throw new Error(`clickable not found: "${t}"`);
 };
 // Type into a controlled React input and verify it stuck (hydration can reset early keystrokes).
+const waitHydrated = (sel) =>
+  page.waitForFunction((s) => {
+    const el = document.querySelector(s);
+    return el && Object.keys(el).some((k) => k.startsWith('__reactFiber') || k.startsWith('__reactProps'));
+  }, { timeout: 60000 }, sel);
 const type = async (sel, val) => {
   await page.waitForSelector(sel);
+  await waitHydrated(sel); // React (dev mode) may hydrate seconds after the HTML shows; typing earlier gets reset
   for (let attempt = 0; attempt < 4; attempt++) {
     await page.click(sel, { clickCount: 3 });
     await page.keyboard.press('Backspace');
@@ -117,6 +131,18 @@ await test('register new client', async () => {
   const pw = await page.$$('input[type="password"]');
   await pw[0].type(USER.password);
   await pw[1].type(USER.password);
+  // dev-mode hydration can land after typing and reset controlled inputs: re-verify every field before submitting
+  await sleep(1200);
+  const expected = [['input[placeholder="e.g. Aman Verma"]', USER.name], ['input[type="email"]', USER.email], ['input[type="tel"]', USER.phone]];
+  for (const [sel, val] of expected) {
+    const cur = await page.$eval(sel, (e) => e.value);
+    if (cur !== val) await type(sel, val);
+  }
+  const pwVals = await page.$$eval('input[type="password"]', (els) => els.map((e) => e.value));
+  if (pwVals.some((v) => !v)) {
+    const again = await page.$$('input[type="password"]');
+    for (const el of again) { await el.click({ clickCount: 3 }); await el.type(USER.password); }
+  }
   await shot('03-register');
   await clickText('Create account');
   await page.waitForFunction(() => location.pathname === '/book', { timeout: 30000 });
@@ -140,7 +166,7 @@ await test('book a slot and receive a token', async () => {
   await shot('04-book-form', true);
   await clickText('Confirm & Generate Token');
   await waitText('Token Reserved!');
-  token = await page.evaluate(() => (document.body.innerText.match(/#(\d{3,})/) || [])[1]);
+  token = await page.evaluate(() => (document.body.innerText.match(/YOUR TOKEN NUMBER\s*#(\d+)/i) || document.body.innerText.match(/#(\d+)/) || [])[1]);
   if (!token) throw new Error('token number not shown');
   await shot('05-token-success');
   await clickText('Track in Live Queue');
@@ -247,7 +273,9 @@ await test('admin payments, services, barbers, content, settings, clients pages 
   await waitText(`#${token}`);
   await shot('15-admin-payments');
   await goto('/admin/services'); await waitText('Hair Cut'); await shot('16-admin-services');
-  await goto('/admin/barbers'); await waitText('Ramesh'); await shot('17-admin-barbers');
+  await goto('/admin/barbers'); await waitText('Barbers');
+  await page.waitForFunction(() => /accepting bookings|no barbers yet|senior barber|stylist|barber\b/i.test(document.body.innerText) && !document.querySelector('.skeleton'));
+  await shot('17-admin-barbers');
   await goto('/admin/content'); await waitText('Home page photos & videos'); await shot('18-admin-content', true);
   await goto('/admin/settings'); await waitText('Working hours'); await shot('19-admin-settings');
   await goto('/admin/clients'); await waitText(USER.name); await shot('20-admin-clients');

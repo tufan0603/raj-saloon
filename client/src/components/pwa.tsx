@@ -66,7 +66,7 @@ export function PWAProvider({ children }: { children: ReactNode }) {
       )}
       {children}
       {waiting && (
-        <div className="fixed inset-x-0 bottom-20 z-[95] mx-auto w-[calc(100%-2rem)] max-w-md">
+        <div className="fixed inset-x-0 bottom-20 z-40 mx-auto w-[calc(100%-2rem)] max-w-md">
           <button
             onClick={() => waiting.postMessage({ type: 'SKIP_WAITING' })}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-xs font-bold text-white shadow-xl"
@@ -76,7 +76,7 @@ export function PWAProvider({ children }: { children: ReactNode }) {
         </div>
       )}
       {showInstall && (
-        <div className="fixed inset-x-0 bottom-20 z-[95] mx-auto w-[calc(100%-2rem)] max-w-md animate-slideup">
+        <div className="fixed inset-x-0 bottom-20 z-40 mx-auto w-[calc(100%-2rem)] max-w-md animate-slideup">
           <div className="flex items-center gap-3 rounded-2xl border border-brand-200 bg-white p-3 shadow-xl">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/icons/icon-192.png" alt="" className="h-11 w-11 rounded-xl" />

@@ -2,11 +2,12 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Scissors, Home, CalendarPlus, ListOrdered, UserRound, LayoutDashboard, CalendarDays, Wallet, Menu, ChevronLeft, ShieldCheck, LogIn } from 'lucide-react';
+import { Home, CalendarPlus, ListOrdered, UserRound, LayoutDashboard, CalendarDays, Wallet, Menu, ChevronLeft, ShieldCheck, LogIn } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-context';
 import { useSettings } from '@/lib/settings-context';
 import { Spinner } from './ui';
+import { BrandLogo } from './brand';
 
 type NavKind = 'user' | 'admin' | 'none';
 
@@ -41,13 +42,8 @@ export function AppShell({ children, nav = 'user', title, back, right, subtitle,
                 <ChevronLeft className="h-5 w-5" />
               </button>
             ) : (
-              <Link href={nav === 'admin' ? '/admin' : '/'} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-white shadow-sm">
-                {settings.logo?.url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={settings.logo.url} alt="" className="h-9 w-9 rounded-xl object-cover" />
-                ) : (
-                  <Scissors className="h-4 w-4" />
-                )}
+              <Link href={nav === 'admin' ? '/admin' : '/'} className="shrink-0" aria-label="Home">
+                <BrandLogo size={38} />
               </Link>
             )}
             <div className="min-w-0">

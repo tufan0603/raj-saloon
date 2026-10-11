@@ -16,7 +16,14 @@ export const metadata: Metadata = {
   applicationName: APP_NAME,
   appleWebApp: { capable: true, statusBarStyle: 'default', title: APP_NAME },
   formatDetection: { telephone: false },
-  icons: { icon: '/icons/icon-192.png', apple: '/icons/apple-touch-icon.png' },
+  icons: {
+    icon: [
+      { url: '/icons/favicon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icons/favicon-64.png', sizes: '64x64', type: 'image/png' },
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: '/icons/apple-touch-icon.png',
+  },
 };
 
 export const viewport: Viewport = {

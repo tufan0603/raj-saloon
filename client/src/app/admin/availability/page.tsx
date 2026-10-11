@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import dayjs from 'dayjs';
+import Link from 'next/link';
 import { ChevronLeft, ChevronRight, Ban, Clock, RotateCcw, Save } from 'lucide-react';
 import { AdminShell, BarberTabs } from '@/components/admin';
 import { Button, Field, Input, SectionTitle, Sheet, Skeleton, Toggle } from '@/components/ui';
@@ -11,7 +12,7 @@ import type { Barber, Slot } from '@/lib/types';
 import { cn, fmtTime, todayStr, WEEKDAYS } from '@/lib/utils';
 
 interface MonthDay { date: string; open: boolean; start: string; end: string; reason: string; blocked: number; hasOverride: boolean; activeBookings: number; totalBookings: number }
-interface DayDetail { date: string; override: any; open: boolean; reason?: string; window?: { start: string; end: string }; slots: Slot[]; bookings: { customerName: string; slotTime: string; duration: number; tokenNumber: number }[] }
+interface DayDetail { date: string; override: any; open: boolean; reason?: string; window?: { start: string; end: string }; slots: Slot[]; bookings: { customerName: string; slotTime: string; duration: number; tokenNumber: number; serviceName?: string }[] }
 
 export default function AvailabilityPage() {
   const toast = useToast();
@@ -151,8 +152,29 @@ export default function AvailabilityPage() {
               <Toggle checked={form.isOff} onChange={(v) => setForm({ ...form, isOff: v })} />
             </div>
             {detail.bookings.length > 0 && (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-[11px] text-amber-800">
-                <b>{detail.bookings.length} active booking(s)</b> on this day: {detail.bookings.map((b) => `#${b.tokenNumber} ${b.customerName} ${fmtTime(b.slotTime)}`).join(', ')}. Cancel or move them from Bookings if you take the day off.
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
+                <p className="text-xs font-bold text-amber-900">
+                  {detail.bookings.length === 1 ? '1 client is already booked on this day' : `${detail.bookings.length} clients are already booked on this day`}
+                </p>
+                <ul className="mt-2 space-y-1">
+                  {[...detail.bookings].sort((a, b) => a.slotTime.localeCompare(b.slotTime)).map((b) => (
+                    <li key={b.tokenNumber} className="flex items-center justify-between rounded-lg bg-white/70 px-2.5 py-1.5 text-xs">
+                      <span className="flex items-center gap-2">
+                        <span className="rounded bg-slate-900 px-1.5 py-0.5 font-mono text-[10px] font-bold text-white">#{b.tokenNumber}</span>
+                        <span className="font-semibold text-slate-800">{b.customerName}</span>
+                      </span>
+                      <span className="text-slate-500">{fmtTime(b.slotTime)} &bull; {b.serviceName}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-2 text-[11px] leading-snug text-amber-800">
+                  {form.isOff
+                    ? 'Taking the day off does not cancel these bookings. Please move them to another day or barber, or cancel them, so the clients are informed.'
+                    : 'Their slots are shown in green below and cannot be blocked. To free them, move or cancel the bookings first.'}
+                </p>
+                <Link href={`/admin/bookings?date=${day}`} className="btn-secondary mt-2 w-full py-2 text-xs">
+                  Open this day&apos;s bookings
+                </Link>
               </div>
             )}
             {!form.isOff && (
