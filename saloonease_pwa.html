@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SaloonEase - Fast Salon Queue & Slot Booking</title>
+
+  <!-- PWA Metadata -->
+  <meta name="theme-color" content="#ffffff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="SaloonEase">
+  <meta name="description" content="Instant Salon Slot Booking & Live Queue Status">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Font & Font Awesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    body {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .safe-bottom {
+      padding-bottom: calc(env(safe-area-inset-bottom) + 5rem);
+    }
+    .pulse-ring {
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+      animation: pulse 1.8s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+      70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased font-sans min-h-full flex flex-col">
+
+  <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
+    <div class="max-w-md mx-auto px-4 h-14 flex items-center justify-between">
+      <div class="flex items-center space-x-2.5 cursor-pointer" onclick="switchTab('dashboard')">
+        <div class="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+          <i class="fa-solid fa-scissors"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-extrabold tracking-tight text-slate-900 leading-none">SaloonEase</h1>
+          <p class="text-[11px] font-medium text-emerald-600 flex items-center gap-1 mt-0.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            Live Queue Active
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <!-- Quick Barber Switch (Admin / Staff mode simulation) -->
+        <button onclick="toggleAdminDrawer()" class="px-2.5 py-1 text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg border border-slate-200 flex items-center gap-1.5">
+          <i class="fa-solid fa-user-gear text-slate-500"></i>
+          <span id="header-barber-label">Barber: Ramesh</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-md mx-auto w-full px-4 pt-4 safe-bottom flex-1">
+
+    <!-- ==================== VIEW 1: DASHBOARD & LIVE QUEUE ==================== -->
+    <section id="view-dashboard" class="space-y-4">
+      
+      <!-- Current Serving Banner -->
+      <div class="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-2xl p-4 text-white shadow-md">
+        <div class="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-emerald-100">
+          <span>Now In Chair</span>
+          <span class="bg-white/20 px-2 py-0.5 rounded-full text-[10px]">Serving</span>
+        </div>
+        
+        <div class="mt-2.5 flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="w-12 h-12 rounded-xl bg-white text-emerald-700 font-extrabold flex items-center justify-center text-lg shadow">
+              <span id="current-serving-token">#101</span>
+            </div>
+            <div>
+              <h2 id="current-serving-name" class="text-base font-bold text-white">Rohit Sharma</h2>
+              <p id="current-serving-service" class="text-xs text-emerald-100">Hair + Beard Combo</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="text-[10px] text-emerald-100 uppercase font-medium">Finishing in</span>
+            <p id="current-serving-left" class="text-sm font-extrabold">~8 mins</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- User's Live Turn Card (Dynamic) -->
+      <div id="user-turn-status-card" class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+        <!-- Injected via JavaScript based on whether user booked today -->
+      </div>
+
+      <!-- Quick Service Rate Card -->
+      <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between mb-2.5">
+          <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Services & Rates</h3>
+          <span class="text-[11px] text-emerald-600 font-semibold">Fixed Pricing</span>
+        </div>
+        <div class="grid grid-cols-3 gap-2 text-center">
+          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+            <span class="text-xs font-bold text-slate-800 block">Hair Cut</span>
+            <span class="text-xs font-semibold text-emerald-600 block mt-0.5">₹150</span>
+            <span class="text-[10px] text-slate-400">30 mins</span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+            <span class="text-xs font-bold text-slate-800 block">Beard</span>
+            <span class="text-xs font-semibold text-emerald-600 block mt-0.5">₹80</span>
+            <span class="text-[10px] text-slate-400">15 mins</span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200">
+            <span class="text-xs font-bold text-slate-900 block">Hair + Beard</span>
+            <span class="text-xs font-bold text-emerald-700 block mt-0.5">₹200</span>
+            <span class="text-[10px] text-emerald-600 font-medium">35 mins</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Today's Queue Timeline -->
+      <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+            <i class="fa-solid fa-list-ol text-emerald-600"></i>
+            <span>Today's Queue</span>
+          </h3>
+          <span id="queue-count-badge" class="text-xs font-semibold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">3 in line</span>
+        </div>
+
+        <div id="live-queue-list" class="space-y-2">
+          <!-- Dynamically populated queue list -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==================== VIEW 2: INSTANT BOOKING FORM ==================== -->
+    <section id="view-booking" class="space-y-4 hidden">
+      <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+        <h2 class="text-base font-extrabold text-slate-900 mb-0.5">Book Your Slot</h2>
+        <p class="text-xs text-slate-500 mb-4">Fast token generation & instant turn tracking</p>
+
+        <form id="booking-form" onsubmit="handleNewBooking(event)" class="space-y-4">
+          <!-- Customer Name & Phone in minimal inputs -->
+          <div class="space-y-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Your Full Name</label>
+              <input type="text" id="cust-name" required placeholder="e.g. Aman Verma" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Mobile Number</label>
+              <input type="tel" id="cust-phone" required maxlength="10" placeholder="10-digit mobile number" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition">
+            </div>
+          </div>
+
+          <!-- Select Barber -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Select Barber</label>
+            <div class="grid grid-cols-3 gap-2" id="barber-selection-grid">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Select Service (Hair / Beard / Hair+Beard) -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Select Service</label>
+            <div class="space-y-2" id="service-options-container">
+              <!-- Hair Option -->
+              <label class="service-radio flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer transition hover:bg-emerald-50/40">
+                <div class="flex items-center space-x-2.5">
+                  <input type="radio" name="selected_service" value="hair" checked class="text-emerald-600 focus:ring-emerald-500 w-4 h-4" onchange="calculateSummary()">
+                  <div>
+                    <span class="text-xs font-bold text-slate-900 block">Hair Cut</span>
+                    <span class="text-[11px] text-slate-500">Duration: 30 mins</span>
+                  </div>
+                </div>
+                <span class="text-sm font-extrabold text-slate-900">₹150</span>
+              </label>
+
+              <!-- Beard Option -->
+              <label class="service-radio flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer transition hover:bg-emerald-50/40">
+                <div class="flex items-center space-x-2.5">
+                  <input type="radio" name="selected_service" value="beard" class="text-emerald-600 focus:ring-emerald-500 w-4 h-4" onchange="calculateSummary()">
+                  <div>
+                    <span class="text-xs font-bold text-slate-900 block">Beard Trim & Shape</span>
+                    <span class="text-[11px] text-slate-500">Duration: 15 mins</span>
+                  </div>
+                </div>
+                <span class="text-sm font-extrabold text-slate-900">₹80</span>
+              </label>
+
+              <!-- Hair + Beard Combo Option -->
+              <label class="service-radio flex items-center justify-between p-3 rounded-xl border border-emerald-300 bg-emerald-50/50 cursor-pointer transition hover:bg-emerald-100/50">
+                <div class="flex items-center space-x-2.5">
+                  <input type="radio" name="selected_service" value="combo" class="text-emerald-600 focus:ring-emerald-500 w-4 h-4" onchange="calculateSummary()">
+                  <div>
+                    <span class="text-xs font-bold text-slate-900 block flex items-center gap-1.5">
+                      Hair + Beard Combo
+                      <span class="text-[9px] uppercase px-1.5 py-0.2 bg-emerald-600 text-white rounded font-bold">Fast & Save ₹30</span>
+                    </span>
+                    <span class="text-[11px] text-emerald-700 font-medium">Duration: 35 mins</span>
+                  </div>
+                </div>
+                <span class="text-sm font-extrabold text-emerald-700">₹200</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Select Date -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Date</label>
+            <div class="grid grid-cols-2 gap-2" id="date-selection-grid">
+              <button type="button" onclick="selectBookingDate('today')" id="date-btn-today" class="py-2.5 rounded-xl border border-emerald-600 bg-emerald-50 text-emerald-700 font-bold text-xs">
+                Today (Live Queue)
+              </button>
+              <button type="button" onclick="selectBookingDate('tomorrow')" id="date-btn-tomorrow" class="py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-600 font-semibold text-xs hover:bg-slate-100">
+                Tomorrow
+              </button>
+            </div>
+          </div>
+
+          <!-- Select Slot Time -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-xs font-semibold text-slate-700">Available Slot</label>
+              <span id="slot-approx-time" class="text-[11px] text-emerald-600 font-semibold">Instant / Next turn</span>
+            </div>
+            <div class="grid grid-cols-3 gap-1.5 max-h-36 overflow-y-auto p-1 bg-slate-50 rounded-xl border border-slate-200" id="slot-pill-container">
+              <!-- Dynamically generated time pills -->
+            </div>
+          </div>
+
+          <!-- Quick Summary Bar -->
+          <div class="p-3 bg-slate-100 rounded-xl flex items-center justify-between text-xs">
+            <div>
+              <span class="text-slate-500 block">Estimated Service Time</span>
+              <span id="summary-duration" class="font-bold text-slate-800">30 mins</span>
+            </div>
+            <div class="text-right">
+              <span class="text-slate-500 block">Total Payable</span>
+              <span id="summary-price" class="text-base font-extrabold text-emerald-600">₹150</span>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-extrabold rounded-xl text-sm shadow-md shadow-emerald-600/20 transition flex items-center justify-center space-x-2">
+            <i class="fa-solid fa-ticket"></i>
+            <span>Confirm & Generate Token</span>
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 3: MY BOOKINGS ==================== -->
+    <section id="view-mybooking" class="space-y-4 hidden">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-base font-extrabold text-slate-900">My Appointments</h2>
+          <p class="text-xs text-slate-500">Track tokens and past visits</p>
+        </div>
+        <button onclick="switchTab('booking')" class="text-xs font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-emerald-200">
+          + Book New
+        </button>
+      </div>
+
+      <div id="user-booking-cards-container" class="space-y-3">
+        <!-- Rendered via JavaScript -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== BARBER ADMIN DRAWER / CONTROLS ==================== -->
+  <div id="admin-drawer" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl border border-slate-200 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center space-x-2">
+          <div class="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-xs">
+            <i class="fa-solid fa-scissors"></i>
+          </div>
+          <h3 class="font-extrabold text-slate-900 text-sm">Barber Queue Control</h3>
+        </div>
+        <button onclick="toggleAdminDrawer()" class="text-slate-400 hover:text-slate-700 text-sm">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Quick Action: Complete Current & Call Next -->
+      <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl text-center">
+        <span class="text-xs text-emerald-800 font-semibold block mb-1">Serving Now: <strong id="admin-serving-name">Rohit Sharma</strong> (#101)</span>
+        <button onclick="adminCallNextClient()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-sm flex items-center justify-center space-x-2">
+          <i class="fa-solid fa-forward-step"></i>
+          <span>Call Next Client in Queue</span>
+        </button>
+      </div>
+
+      <!-- Switch Active Barber View -->
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1.5">Switch Barber Mode</label>
+        <div class="grid grid-cols-2 gap-2" id="admin-barber-toggle-group">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+
+      <!-- Reset demo queue helper -->
+      <div class="pt-2 border-t border-slate-100 flex justify-between items-center text-xs text-slate-500">
+        <span>Test Demo Queue</span>
+        <button onclick="resetDemoQueue()" class="text-emerald-600 font-semibold hover:underline">Reset Sample Data</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="token-success-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
+    <div class="bg-white max-w-xs w-full rounded-2xl p-5 text-center shadow-xl border border-slate-100">
+      <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl mx-auto mb-3">
+        <i class="fa-solid fa-check"></i>
+      </div>
+      <h3 class="font-extrabold text-base text-slate-900">Token Reserved!</h3>
+      <p class="text-xs text-slate-500 mt-0.5">Show this token when you arrive.</p>
+
+      <div class="my-4 p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+        <div class="text-xs text-slate-400 font-semibold uppercase">Your Token Number</div>
+        <div id="modal-token-no" class="text-3xl font-black text-emerald-600 font-mono">#104</div>
+        <div class="text-xs font-semibold text-slate-700" id="modal-token-service">Hair + Beard (35m)</div>
+        <div class="text-[11px] text-slate-500" id="modal-token-time">Estimated: Today ~12:15 PM</div>
+      </div>
+
+      <button onclick="closeTokenModal()" class="w-full py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-xs shadow-md">
+        View In Queue Dashboard
+      </button>
+    </div>
+  </div>
+
+  <nav class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-200">
+    <div class="max-w-md mx-auto grid grid-cols-3 h-16 text-[11px]">
+      <button onclick="switchTab('dashboard')" id="nav-btn-dashboard" class="flex flex-col items-center justify-center text-emerald-600 font-bold">
+        <i class="fa-solid fa-stopwatch text-base mb-1"></i>
+        <span>Live Queue</span>
+      </button>
+      <button onclick="switchTab('booking')" id="nav-btn-booking" class="flex flex-col items-center justify-center text-slate-400 font-semibold">
+        <div class="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center -mt-2 shadow-sm">
+          <i class="fa-solid fa-plus text-xs"></i>
+        </div>
+        <span class="mt-0.5">Book Slot</span>
+      </button>
+      <button onclick="switchTab('mybooking')" id="nav-btn-mybooking" class="flex flex-col items-center justify-center text-slate-400 font-semibold">
+        <i class="fa-regular fa-calendar-check text-base mb-1"></i>
+        <span>My Bookings</span>
+      </button>
+    </div>
+  </nav>
+
+  <script>
+    const STORAGE_KEY = 'saloonease_data_v1';
+
+    // Core Pricing & Duration Rules
+    const SERVICES = {
+      hair: { name: 'Hair Cut', duration: 30, price: 150 },
+      beard: { name: 'Beard Trim & Shape', duration: 15, price: 80 },
+      combo: { name: 'Hair + Beard Combo', duration: 35, price: 200 }
+    };
+
+    const BARBERS = [
+      { id: 'b1', name: 'Ramesh', active: true },
+      { id: 'b2', name: 'Rahul', active: true }
+    ];
+
+    // Default Seed State
+    const DEFAULT_DATA = {
+      selectedBarberId: 'b1',
+      userTokenId: null, // Tracks if current user has an active token
+      queue: [
+        {
+          id: 'T101',
+          tokenNumber: 101,
+          name: 'Rohit Sharma',
+          phone: '9876543210',
+          barberId: 'b1',
+          serviceKey: 'combo',
+          date: 'today',
+          status: 'serving', // 'serving' | 'waiting' | 'done'
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: 'T102',
+          tokenNumber: 102,
+          name: 'Deepak Patel',
+          phone: '9811223344',
+          barberId: 'b1',
+          serviceKey: 'hair',
+          date: 'today',
+          status: 'waiting',
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: 'T103',
+          tokenNumber: 103,
+          name: 'Vikas Kumar',
+          phone: '9844556677',
+          barberId: 'b1',
+          serviceKey: 'beard',
+          date: 'today',
+          status: 'waiting',
+          createdAt: new Date().toISOString()
+        }
+      ],
+      userBookings: []
+    };
+
+    let appData = { ...DEFAULT_DATA };
+    let currentTab = 'dashboard';
+    let selectedBookingDate = 'today';
+    let selectedSlotTime = 'Immediate Next';
+
+    function loadAppState() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          appData = JSON.parse(stored);
+        }
+      } catch (e) {
+        console.warn('Storage read fallback', e);
+      }
+    }
+
+    function saveAppState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+      } catch (e) {
+        console.warn('Storage save failed', e);
+      }
+    }
+
+    function resetDemoQueue() {
+      appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+      saveAppState();
+      renderAll();
+      toggleAdminDrawer();
+    }
+
+    function switchTab(tabId) {
+      currentTab = tabId;
+      ['dashboard', 'booking', 'mybooking'].forEach(t => {
+        const viewEl = document.getElementById(`view-${t}`);
+        const navBtn = document.getElementById(`nav-btn-${t}`);
+        if (t === tabId) {
+          viewEl.classList.remove('hidden');
+          navBtn.classList.add('text-emerald-600', 'font-bold');
+          navBtn.classList.remove('text-slate-400', 'font-semibold');
+        } else {
+          viewEl.classList.add('hidden');
+          navBtn.classList.remove('text-emerald-600', 'font-bold');
+          navBtn.classList.add('text-slate-400', 'font-semibold');
+        }
+      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      renderAll();
+    }
+
+    function renderDashboard() {
+      const activeBarber = BARBERS.find(b => b.id === appData.selectedBarberId) || BARBERS[0];
+      document.getElementById('header-barber-label').textContent = `Barber: ${activeBarber.name}`;
+      
+      const barberQueue = appData.queue.filter(q => q.barberId === activeBarber.id && q.date === 'today');
+      const serving = barberQueue.find(q => q.status === 'serving');
+      const waitingList = barberQueue.filter(q => q.status === 'waiting');
+
+      // 1. Current Serving Card
+      if (serving) {
+        const sInfo = SERVICES[serving.serviceKey];
+        document.getElementById('current-serving-token').textContent = `#${serving.tokenNumber}`;
+        document.getElementById('current-serving-name').textContent = serving.name;
+        document.getElementById('current-serving-service').textContent = `${sInfo.name} (₹${sInfo.price})`;
+        document.getElementById('current-serving-left').textContent = `~${Math.round(sInfo.duration / 2)} mins`;
+        document.getElementById('admin-serving-name').textContent = `${serving.name} (#${serving.tokenNumber})`;
+      } else {
+        document.getElementById('current-serving-token').textContent = 'None';
+        document.getElementById('current-serving-name').textContent = 'Chair Available';
+        document.getElementById('current-serving-service').textContent = 'No client currently in chair';
+        document.getElementById('current-serving-left').textContent = 'Ready';
+        document.getElementById('admin-serving-name').textContent = 'None (Available)';
+      }
+
+      // 2. User's Live Turn Status Card (Calculates exact count & minutes ahead)
+      const userCard = document.getElementById('user-turn-status-card');
+      const userActiveBooking = barberQueue.find(q => q.id === appData.userTokenId && q.status !== 'done');
+
+      if (userActiveBooking) {
+        if (userActiveBooking.status === 'serving') {
+          userCard.innerHTML = `
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600">You are In Chair!</span>
+                <h3 class="text-base font-extrabold text-slate-900">Your Turn Right Now</h3>
+                <p class="text-xs text-slate-500">Token #${userActiveBooking.tokenNumber} • ${SERVICES[userActiveBooking.serviceKey].name}</p>
+              </div>
+              <div class="w-12 h-12 rounded-xl bg-emerald-600 text-white font-extrabold flex items-center justify-center text-lg shadow pulse-ring">
+                #${userActiveBooking.tokenNumber}
+              </div>
+            </div>
+          `;
+        } else {
+          // Calculate clients ahead of user
+          const indexInWaiting = waitingList.findIndex(q => q.id === userActiveBooking.id);
+          const clientsAhead = indexInWaiting; // 0 means next
+
+          // Calculate approximate wait time based on durations
+          let totalWaitMins = serving ? Math.round(SERVICES[serving.serviceKey].duration / 2) : 0;
+          for (let i = 0; i < indexInWaiting; i++) {
+            totalWaitMins += SERVICES[waitingList[i].serviceKey].duration;
+          }
+
+          const approxTime = getEstimatedClockTime(totalWaitMins);
+
+          userCard.innerHTML = `
+            <div class="flex items-start justify-between">
+              <div>
+                <div class="flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600">Your Position</span>
+                </div>
+                <h3 class="text-sm font-extrabold text-slate-900 mt-0.5">
+                  ${clientsAhead === 0 ? 'You are Next in Line!' : `${clientsAhead} Client${clientsAhead > 1 ? 's' : ''} Ahead of You`}
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">Token: <strong>#${userActiveBooking.tokenNumber}</strong> (${SERVICES[userActiveBooking.serviceKey].name})</p>
+              </div>
+              <div class="text-right">
+                <span class="text-[10px] text-slate-400 font-semibold block">Approx Wait</span>
+                <span class="text-lg font-black text-emerald-600">~${totalWaitMins}m</span>
+              </div>
+            </div>
+            <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
+              <span>Expected Service Start:</span>
+              <span class="font-bold text-slate-900">${approxTime}</span>
+            </div>
+          `;
+        }
+      } else {
+        // Not booked yet: Show quick salon wait status + CTA
+        let currentQueueWait = serving ? Math.round(SERVICES[serving.serviceKey].duration / 2) : 0;
+        waitingList.forEach(item => {
+          currentQueueWait += SERVICES[item.serviceKey].duration;
+        });
+
+        userCard.innerHTML = `
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Current Wait</span>
+              <h3 class="text-sm font-bold text-slate-900">
+                ${waitingList.length === 0 ? 'No Waiting Right Now!' : `${waitingList.length} clients waiting (~${currentQueueWait}m)`}
+              </h3>
+              <p class="text-xs text-slate-500">Book your slot now to secure your turn</p>
+            </div>
+            <button onclick="switchTab('booking')" class="px-3.5 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs shadow-sm active:scale-95 transition">
+              Get Token
+            </button>
+          </div>
+        `;
+      }
+
+      // 3. Queue List Timeline
+      const queueContainer = document.getElementById('live-queue-list');
+      document.getElementById('queue-count-badge').textContent = `${waitingList.length} in line`;
+
+      if (waitingList.length === 0) {
+        queueContainer.innerHTML = `
+          <div class="py-6 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+            No one waiting in line. Next walk-in goes directly in chair!
+          </div>
+        `;
+      } else {
+        let runningMins = serving ? Math.round(SERVICES[serving.serviceKey].duration / 2) : 0;
+
+        queueContainer.innerHTML = waitingList.map((item, idx) => {
+          const s = SERVICES[item.serviceKey];
+          const estClock = getEstimatedClockTime(runningMins);
+          const isUser = item.id === appData.userTokenId;
+          const waitTimeForThisItem = runningMins;
+          runningMins += s.duration;
+
+          return `
+            <div class="p-2.5 rounded-xl border ${isUser ? 'border-emerald-500 bg-emerald-50/50 ring-1 ring-emerald-400' : 'border-slate-100 bg-slate-50'} flex items-center justify-between">
+              <div class="flex items-center space-x-2.5">
+                <span class="text-xs font-mono font-bold px-2 py-1 rounded-lg ${isUser ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-700'}">
+                  #${item.tokenNumber}
+                </span>
+                <div>
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-xs font-bold text-slate-900">${item.name}</span>
+                    ${isUser ? '<span class="text-[9px] font-extrabold bg-emerald-600 text-white px-1.5 py-0.2 rounded">YOU</span>' : ''}
+                  </div>
+                  <span class="text-[11px] text-slate-500">${s.name} (₹${s.price})</span>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="text-xs font-bold text-slate-800">${estClock}</span>
+                <span class="text-[10px] text-slate-400 block">in ~${waitTimeForThisItem}m</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    function getEstimatedClockTime(minutesFromNow) {
+      const now = new Date();
+      now.setMinutes(now.getMinutes() + minutesFromNow);
+      return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+    }
+
+    function renderBookingForm() {
+      // Barbers selection pills
+      const barberGrid = document.getElementById('barber-selection-grid');
+      barberGrid.innerHTML = BARBERS.map(b => {
+        const isSelected = b.id === appData.selectedBarberId;
+        return `
+          <button type="button" onclick="selectBarberInBooking('${b.id}')" class="p-2 rounded-xl text-xs font-bold border transition ${
+            isSelected 
+              ? 'border-emerald-600 bg-emerald-50 text-emerald-700' 
+              : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+          }">
+            ${b.name}
+          </button>
+        `;
+      }).join('') + `
+        <button type="button" onclick="selectBarberInBooking('any')" class="p-2 rounded-xl text-xs font-semibold border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100">
+          Any Free
+        </button>
+      `;
+
+      // Render Time Slot Pills
+      renderTimeSlots();
+      calculateSummary();
+    }
+
+    function selectBarberInBooking(barberId) {
+      if (barberId !== 'any') {
+        appData.selectedBarberId = barberId;
+      }
+      renderBookingForm();
+      renderDashboard();
+    }
+
+    function selectBookingDate(dateType) {
+      selectedBookingDate = dateType;
+      const btnToday = document.getElementById('date-btn-today');
+      const btnTomorrow = document.getElementById('date-btn-tomorrow');
+      if (dateType === 'today') {
+        btnToday.className = 'py-2.5 rounded-xl border border-emerald-600 bg-emerald-50 text-emerald-700 font-bold text-xs';
+        btnTomorrow.className = 'py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-600 font-semibold text-xs hover:bg-slate-100';
+      } else {
+        btnTomorrow.className = 'py-2.5 rounded-xl border border-emerald-600 bg-emerald-50 text-emerald-700 font-bold text-xs';
+        btnToday.className = 'py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-600 font-semibold text-xs hover:bg-slate-100';
+      }
+      renderTimeSlots();
+    }
+
+    function renderTimeSlots() {
+      const container = document.getElementById('slot-pill-container');
+      const slots = selectedBookingDate === 'today' 
+        ? ['Immediate Next', '12:30 PM', '01:15 PM', '02:00 PM', '03:30 PM', '05:00 PM']
+        : ['10:00 AM', '11:00 AM', '12:00 PM', '02:30 PM', '04:00 PM', '06:00 PM'];
+
+      container.innerHTML = slots.map((s, idx) => `
+        <button type="button" onclick="selectSlotPill('${s}')" class="py-2 px-1 text-center rounded-lg text-xs font-semibold border ${
+          selectedSlotTime === s 
+            ? 'border-emerald-600 bg-emerald-600 text-white font-bold' 
+            : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-100'
+        }">
+          ${s}
+        </button>
+      `).join('');
+
+      document.getElementById('slot-approx-time').textContent = selectedSlotTime;
+    }
+
+    function selectSlotPill(slotTime) {
+      selectedSlotTime = slotTime;
+      renderTimeSlots();
+    }
+
+    function getSelectedServiceKey() {
+      const checkedRadio = document.querySelector('input[name="selected_service"]:checked');
+      return checkedRadio ? checkedRadio.value : 'hair';
+    }
+
+    function calculateSummary() {
+      const sKey = getSelectedServiceKey();
+      const s = SERVICES[sKey];
+      document.getElementById('summary-duration').textContent = `${s.duration} mins`;
+      document.getElementById('summary-price').textContent = `₹${s.price}`;
+    }
+
+    function handleNewBooking(event) {
+      event.preventDefault();
+      const name = document.getElementById('cust-name').value.trim();
+      const phone = document.getElementById('cust-phone').value.trim();
+      const sKey = getSelectedServiceKey();
+      const service = SERVICES[sKey];
+
+      if (!name || !phone) return;
+
+      const nextTokenNum = appData.queue.length > 0 
+        ? Math.max(...appData.queue.map(q => q.tokenNumber)) + 1 
+        : 101;
+
+      const newId = `T${nextTokenNum}`;
+
+      const newBooking = {
+        id: newId,
+        tokenNumber: nextTokenNum,
+        name: name,
+        phone: phone,
+        barberId: appData.selectedBarberId,
+        serviceKey: sKey,
+        date: selectedBookingDate,
+        status: 'waiting',
+        slotTime: selectedSlotTime,
+        createdAt: new Date().toISOString()
+      };
+
+      appData.queue.push(newBooking);
+      appData.userTokenId = newId;
+
+      // Also add to User Bookings history
+      appData.userBookings.unshift({
+        ...newBooking,
+        price: service.price,
+        serviceName: service.name,
+        duration: service.duration
+      });
+
+      saveAppState();
+
+      // Show confirmation popup
+      document.getElementById('modal-token-no').textContent = `#${nextTokenNum}`;
+      document.getElementById('modal-token-service').textContent = `${service.name} (₹${service.price}, ${service.duration}m)`;
+      document.getElementById('modal-token-time').textContent = selectedBookingDate === 'today' 
+        ? `Estimated: Today (${selectedSlotTime})` 
+        : `Tomorrow (${selectedSlotTime})`;
+      
+      document.getElementById('token-success-modal').classList.remove('hidden');
+
+      // Clear form
+      document.getElementById('booking-form').reset();
+      calculateSummary();
+    }
+
+    function closeTokenModal() {
+      document.getElementById('token-success-modal').classList.add('hidden');
+      switchTab('dashboard');
+    }
+
+    function renderMyBookings() {
+      const container = document.getElementById('user-booking-cards-container');
+      if (appData.userBookings.length === 0) {
+        container.innerHTML = `
+          <div class="py-10 text-center bg-white rounded-2xl border border-slate-200 p-6">
+            <i class="fa-regular fa-calendar-xmark text-slate-300 text-3xl mb-2 block"></i>
+            <h4 class="text-xs font-bold text-slate-800">No Bookings Yet</h4>
+            <p class="text-[11px] text-slate-400 mt-1 mb-4">Book your hair or beard slot in seconds.</p>
+            <button onclick="switchTab('booking')" class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-sm">
+              Book First Slot
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = appData.userBookings.map(b => {
+        const isToday = b.date === 'today';
+        const queueItem = appData.queue.find(q => q.id === b.id);
+        const liveStatus = queueItem ? queueItem.status : 'completed';
+
+        let badgeStyle = 'bg-slate-100 text-slate-600';
+        if (liveStatus === 'serving') badgeStyle = 'bg-emerald-600 text-white animate-pulse';
+        if (liveStatus === 'waiting') badgeStyle = 'bg-amber-100 text-amber-800';
+
+        return `
+          <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex items-center justify-between">
+            <div class="space-y-1">
+              <div class="flex items-center space-x-2">
+                <span class="text-xs font-mono font-bold bg-slate-900 text-white px-2 py-0.5 rounded">#${b.tokenNumber}</span>
+                <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${badgeStyle}">
+                  ${liveStatus === 'serving' ? 'In Chair' : liveStatus}
+                </span>
+              </div>
+              <h4 class="text-xs font-bold text-slate-900">${b.serviceName}</h4>
+              <p class="text-[11px] text-slate-500">
+                <i class="fa-regular fa-clock text-slate-400 mr-1"></i>${b.duration} mins • ₹${b.price}
+                <span class="mx-1">•</span>
+                ${isToday ? 'Today' : 'Tomorrow'}
+              </p>
+            </div>
+            ${liveStatus === 'waiting' ? `
+              <button onclick="cancelMyBooking('${b.id}')" class="text-[11px] text-red-500 hover:text-red-700 font-semibold px-2 py-1 bg-red-50 rounded-lg">
+                Cancel
+              </button>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function cancelMyBooking(bookingId) {
+      if (confirm('Cancel this appointment?')) {
+        appData.queue = appData.queue.filter(q => q.id !== bookingId);
+        if (appData.userTokenId === bookingId) {
+          appData.userTokenId = null;
+        }
+        appData.userBookings = appData.userBookings.filter(b => b.id !== bookingId);
+        saveAppState();
+        renderAll();
+      }
+    }
+
+    function toggleAdminDrawer() {
+      const drawer = document.getElementById('admin-drawer');
+      drawer.classList.toggle('hidden');
+      renderAdminBarberToggles();
+    }
+
+    function renderAdminBarberToggles() {
+      const container = document.getElementById('admin-barber-toggle-group');
+      container.innerHTML = BARBERS.map(b => `
+        <button onclick="setAdminBarber('${b.id}')" class="p-2.5 rounded-xl border text-xs font-bold ${
+          b.id === appData.selectedBarberId 
+            ? 'border-emerald-600 bg-emerald-50 text-emerald-700' 
+            : 'border-slate-200 bg-slate-50 text-slate-600'
+        }">
+          ${b.name}
+        </button>
+      `).join('');
+    }
+
+    function setAdminBarber(barberId) {
+      appData.selectedBarberId = barberId;
+      saveAppState();
+      renderAll();
+      toggleAdminDrawer();
+    }
+
+    function adminCallNextClient() {
+      const bId = appData.selectedBarberId;
+      const bQueue = appData.queue.filter(q => q.barberId === bId && q.date === 'today');
+      
+      const currentServingIdx = bQueue.findIndex(q => q.status === 'serving');
+      if (currentServingIdx !== -1) {
+        bQueue[currentServingIdx].status = 'done';
+      }
+
+      const nextWaiting = bQueue.find(q => q.status === 'waiting');
+      if (nextWaiting) {
+        nextWaiting.status = 'serving';
+      }
+
+      saveAppState();
+      renderAll();
+      toggleAdminDrawer();
+    }
+
+    function renderAll() {
+      renderDashboard();
+      if (currentTab === 'booking') renderBookingForm();
+      if (currentTab === 'mybooking') renderMyBookings();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadAppState();
+      renderAll();
+    });
+  </script>
+</body>
+</html>

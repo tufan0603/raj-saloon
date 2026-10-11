@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  color-scheme: light;
+}
+
+html {
+  height: 100%;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior-y: none;
+}
+
+body {
+  @apply min-h-full bg-slate-50 text-slate-800 antialiased;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  overscroll-behavior-y: none;
+}
+
+input, select, textarea, button { font: inherit; }
+/* Prevent iOS zoom on focus */
+input, select, textarea { font-size: 16px; }
+@media (min-width: 400px) { .text-xs-input input, .text-xs-input select, .text-xs-input textarea { font-size: 14px; } }
+
+::-webkit-scrollbar { width: 0; height: 0; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+@layer components {
+  .card { @apply rounded-2xl border border-slate-200 bg-white p-4 shadow-card; }
+  .label { @apply mb-1 block text-xs font-semibold text-slate-700; }
+  .input {
+    @apply w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:bg-white focus:ring-1 focus:ring-brand-500 disabled:opacity-60;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-primary { @apply btn bg-brand-600 text-white shadow-md shadow-brand-600/20 hover:bg-brand-700; }
+  .btn-secondary { @apply btn border border-slate-200 bg-white text-slate-700 hover:bg-slate-50; }
+  .btn-ghost { @apply btn bg-transparent text-slate-600 hover:bg-slate-100; }
+  .btn-danger { @apply btn bg-red-50 text-red-600 hover:bg-red-100; }
+  .chip { @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide; }
+  .safe-bottom { padding-bottom: calc(var(--sab) + 5.5rem); }
+  .safe-top { padding-top: var(--sat); }
+}
+
+.skeleton { @apply animate-pulse rounded-lg bg-slate-200/70; }
